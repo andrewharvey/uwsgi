@@ -872,7 +872,7 @@ static handler_t uwsgi_write_request(server *srv, handler_ctx *hctx) {
 
 						/* connection is in progress, wait for an event and call getsockopt() below */
 
-						fdevent_event_add(srv->ev, &(hctx->fde_ndx), hctx->fd, FDEVENT_OUT);
+						fdevent_event_set(srv->ev, &(hctx->fde_ndx), hctx->fd, FDEVENT_OUT);
 
 						return HANDLER_WAIT_FOR_EVENT;
 					case -1:
@@ -919,7 +919,7 @@ static handler_t uwsgi_write_request(server *srv, handler_ctx *hctx) {
 
 			/* fall through */
 		case UWSGI_STATE_WRITE:;
-							   ret = srv->network_backend_write(srv, con, hctx->fd, hctx->wb);
+							   ret = srv->network_backend_write(srv, con, hctx->fd, hctx->wb, MAX_WRITE_LIMIT);
 
 							   chunkqueue_remove_finished_chunks(hctx->wb);
 
@@ -937,9 +937,9 @@ static handler_t uwsgi_write_request(server *srv, handler_ctx *hctx) {
 								   uwsgi_set_state(srv, hctx, UWSGI_STATE_READ);
 
 								   fdevent_event_del(srv->ev, &(hctx->fde_ndx), hctx->fd);
-								   fdevent_event_add(srv->ev, &(hctx->fde_ndx), hctx->fd, FDEVENT_IN);
+								   fdevent_event_set(srv->ev, &(hctx->fde_ndx), hctx->fd, FDEVENT_IN);
 							   } else {
-								   fdevent_event_add(srv->ev, &(hctx->fde_ndx), hctx->fd, FDEVENT_OUT);
+								   fdevent_event_set(srv->ev, &(hctx->fde_ndx), hctx->fd, FDEVENT_OUT);
 
 								   return HANDLER_WAIT_FOR_EVENT;
 							   }
